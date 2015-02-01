@@ -16,21 +16,13 @@ function download {
 function extract {
     [ -e $SCHEDULE ] && hash_old=$(md5sum $SCHEDULE)
     rm -f $SCHEDULE
-    pdftotext -f 1 -layout $TEMP/nea.pdf $TEMP/raw.txt
+    pdftotext -f 1 -l 1 -layout $TEMP/nea.pdf $TEMP/raw.txt
     sed -n '/;d"x÷af/,/;d"x–@/p' $TEMP/raw.txt > $TEMP/part.txt
     sed -i 's/\;d"x–.//; /M/!d; s/^ \+//' $TEMP/part.txt
-    # NOTE: 2utf8 is not-really required but for fail and debug situations
-    # 2utf8 -i $TEMP/part.txt > $TEMP/uni.txt
-    # sed -i 's/०/0/g; s/१/1/g; s/२/2/g; s/३/3/g;
-    #         s/४/4/g; s/५/5/g; s/६/6/g; s/७/7/g;
-    #         s/८/8/g; s/९/9/g; s/–/-/g;' $TEMP/uni.txt
-    sed -i 's/)/0/g; s/!/1/g; s/@/2/g; s/#/3/g;
-            s/%/5/g; s/\^/6/g; s/\&/7/g;
-            s/\*/8/g; s/(/9/g; s/–/-/g; s/M/:/g' $TEMP/part.txt
-    # FIX: its hard to replace $
-    cat $TEMP/part.txt | tr '$' '4' > $TEMP/uni.txt
-
-    sed 's/ \+/\t/g' $TEMP/uni.txt | head -2 > $SCHEDULE
+    sed -i 's/)/0/g;  s/!/1/g; s/@/2/g;  s/#/3/g;
+            s/\$/4/g; s/%/5/g; s/\^/6/g; s/\&/7/g;
+            s/\*/8/g; s/(/9/g; s/–/-/g;  s/M/:/g' $TEMP/part.txt
+    sed 's/ \+/\t/g' $TEMP/part.txt | head -2 > $SCHEDULE
 
     hash_new=$(md5sum $SCHEDULE)
     >&2 echo "> Schedule Extracted"
@@ -41,7 +33,7 @@ function extract {
     fi
 }
 
-function get_color { # arg($1:color_code)
+function get_color { # arg($1:color_code_1, $2:color_code_2)
     # NOTE: cdef is always same
     [[ "$SGR" = "" ]] && echo "\033[$1;$2m"
 }
@@ -64,12 +56,12 @@ function range_check { # arg($1:check_value)
 function week_view { # arg($1:group)
     day=(Sun Mon Tue Wed Thr Fri Sat)
 
-    for((i=0;i<7;i++)) {
+    for (( i=0; i<7; i++ )) {
         field=$(rotate_field $i $1)
         f0=$((field-1))
         f1=$((f0+7))
 
-        if [ $today == $i ]; then
+        if [[ $today == $i ]]; then
             color=$(get_color 1 32)
             cdef=$(get_color 0 0)
         else
@@ -107,40 +99,40 @@ function xml_dump {
 
 function all_sch { # arg($1:group)
     # is loaded by default so data must be loaded
-    data=($(sed 's/://g' $SCHEDULE))
+    data=($(cat $SCHEDULE))
 
     h1=$(get_color 1 32)
     c1=$(get_color 1 34)
     cdef=$(get_color 0 0)
 
     echo -en "          $h1"
-
     for day in Sun Mon Tue Wed Thr Fri Sat ; do
-        printf "   %-7s" $day
+        printf "    %-9s" $day
     done
-    echo -en "$cdef\n"
+    echo -e "$cdef"
 
     today=(`date +%w`)
-    for((g=1;g<=7;g++)) {
+    for (( g=1; g<=7; g++ )) {
         echo -en "$h1 Group $g: $cdef"
         grp=$(($g-2))
         line2=""
         if [ "$1" == $grp ]; then c2=$(get_color 0 34);
         else c2=""; fi
 
-        for((i=0;i<7;i++)) {
+        for (( i=0; i<7; i++ )) {
             field=$(rotate_field $i $grp)
             f0=$((field-1))
             f1=$((f0+7))
-            if [ $today == $i ]; then
-                echo -en "$c1${data[$f0]}$cdef "
-                line2+=$(echo -en "$c1${data[f1]}$cdef ")
+            if [[ $today == $i ]]; then
+                echo -en "$c1${data[$f0]}$cdef  "
+                line2+=$(echo -en "$c1${data[f1]}$cdef  ")
             else
-                echo -en "$c2${data[f0]} "
-                line2+=$(echo -en "$c2${data[f1]} ")
+                echo -en "$c2${data[f0]}  "
+                line2+=$(echo -en "$c2${data[f1]}  ")
             fi
         }
         echo -e "$cdef\n          $line2"
+        echo
     }
 }
 
@@ -148,7 +140,8 @@ function today_view { # arg($1:group)
     field=$(rotate_field $today $1)
     f0=$((field-1))
     f1=$((f0+7))
-    echo ${data[f0]}, ${data[f1]}
+    echo "${data[f0]}"
+    echo "${data[f1]}"
 }
 
 function update {
@@ -186,10 +179,10 @@ function Usage {
     echo -e "\t-v | --version\tversion information"
 }
 
-GETOPT=$(getopt -o g:awtudxchv\
-              -l all,group:,week,today,update,dump,xml,credits,help,version\
-              -n "batti"\
-              -- "$@")
+GETOPT=$(getopt -o ag:wtudxchv\
+                -l all,group:,week,today,update,dump,xml,credits,help,version\
+                -n "batti"\
+                -- "$@")
 
 eval set -- "$GETOPT"
 

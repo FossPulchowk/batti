@@ -28,7 +28,7 @@ batti Copyright © 2015 to the batti authors.
        $ sudo make install
      #+END_SRC
 
-: TIP:     see make recipies
+: TIP: See make recipies.
 
 ***** Optional Dependencies
 - [[https://github.com/foss-np/2utf8][2utf8]] old dependencies
@@ -66,15 +66,14 @@ batti Copyright © 2015 to the batti authors.
        $ ./conky_plugin.sh [GROUP_NO]
      #+END_SRC
 
-**** android
+**** Android
      Yes, android is linux and supports bash.
 
-     : NOTE:    we got frustrated from so call that app…
+     : NOTE: We got frustrated from the so called that app.
 
-     apk can be found [][play.google] or from
-     [github.com/foss-np/releases/][here]
+     APK can be found [[play.google]] or from [[https://github.com/foss-np/releases/][here]].
 
-     For building apk you will install the android development base or
+     For building APK, you will install the android development base, or
 
      from source do the following:
      #+BEGIN_SRC bash
